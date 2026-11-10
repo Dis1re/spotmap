@@ -10,13 +10,17 @@ class SpotDetailsSheet extends StatelessWidget {
     required this.spot,
     required this.distanceMeters,
     required this.visited,
+    required this.hasCustomLocation,
     required this.onToggleVisited,
+    required this.onCorrectLocation,
   });
 
   final Spot spot;
   final double? distanceMeters;
   final bool visited;
+  final bool hasCustomLocation;
   final Future<void> Function() onToggleVisited;
+  final VoidCallback onCorrectLocation;
 
   @override
   Widget build(BuildContext context) {
@@ -73,6 +77,15 @@ class SpotDetailsSheet extends StatelessWidget {
                       size: 28,
                     ),
                   ),
+                IconButton(
+                  tooltip: 'Исправить положение',
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    onCorrectLocation();
+                  },
+                  icon: const Icon(Icons.edit_location_alt_outlined),
+                ),
               ],
             ),
             if (spot.description != null) ...[
@@ -88,8 +101,13 @@ class SpotDetailsSheet extends StatelessWidget {
                   icon: Icons.near_me_outlined,
                   label: _distanceLabel(),
                 ),
+                if (hasCustomLocation)
+                  const _InfoChip(
+                    icon: Icons.edit_location_alt_outlined,
+                    label: 'Положение исправлено',
+                  ),
                 if (spot.description == null)
-                  _InfoChip(
+                  const _InfoChip(
                     icon: Icons.info_outline,
                     label: 'Открытые данные OSM',
                   ),

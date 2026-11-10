@@ -24,6 +24,18 @@ class Spot {
 
   LatLng get point => LatLng(lat, lon);
 
+  /// Копия места с исправленными координатами.
+  Spot copyWith({double? lat, double? lon}) {
+    return Spot(
+      id: id,
+      name: name,
+      lat: lat ?? this.lat,
+      lon: lon ?? this.lon,
+      category: category,
+      description: description,
+    );
+  }
+
   /// Разбирает место из сохранённого JSON-снимка.
   factory Spot.fromJson(Map<String, dynamic> json) {
     final rawDescription = json['description']?.toString().trim();

@@ -9,6 +9,7 @@ import 'package:latlong2/latlong.dart';
 import '../data/achievements_store.dart';
 import '../data/explored_zones_grid.dart';
 import '../data/explored_zones_store.dart';
+import '../data/spot_location_store.dart';
 import '../data/spots_refresh_store.dart';
 import '../data/spots_repository.dart';
 import '../data/step_tracker.dart';
@@ -25,6 +26,7 @@ import '../widgets/offline_map_sheet.dart';
 import '../widgets/spot_cluster_layer.dart';
 import '../widgets/spot_details_sheet.dart';
 import 'achievements_screen.dart';
+import 'location_picker_screen.dart';
 import 'nearby_screen.dart';
 import 'spots_list_screen.dart';
 
@@ -49,11 +51,13 @@ class _MapScreenState extends State<MapScreen> {
   final _locationService = LocationService();
   final _exploredZonesStore = ExploredZonesStore();
   final _achievementsStore = AchievementsStore();
+  final _locationStore = SpotLocationStore();
   final _stepTracker = StepTracker();
 
   List<Spot> _spots = const [];
   Set<String> _visitedIds = <String>{};
   Set<String> _exploredZones = <String>{};
+  Map<String, LatLng> _locationOverrides = <String, LatLng>{};
   Set<String> _announcedAchievements = <String>{};
   int _zonesVersion = 0;
   SpotCategory? _filter;
@@ -92,7 +96,9 @@ class _MapScreenState extends State<MapScreen> {
     }
 
     try {
-      final spots = await _spotsRepository.loadSnapshot();
+      final rawSpots = await _spotsRepository.loadSnapshot();
+      final locationOverrides = await _locationStore.load();
+      final spots = _applyLocationOverrides(rawSpots, locationOverrides);
       final visited = await _visitedStore.load();
       final exploredZones = await _exploredZonesStore.load();
       final announced = await _achievementsStore.load();
@@ -110,6 +116,7 @@ class _MapScreenState extends State<MapScreen> {
       if (!mounted) return;
 
       _exploredZones = exploredZones;
+      _locationOverrides = locationOverrides;
       _announcedAchievements = announcedWithCurrent;
 
       setState(() {
@@ -453,6 +460,7 @@ class _MapScreenState extends State<MapScreen> {
               spot: spot,
               distanceMeters: distance,
               visited: visited,
+              hasCustomLocation: _locationOverrides.containsKey(spot.id),
               onToggleVisited: () async {
                 await _toggleVisited(spot);
                 if (context.mounted) {
@@ -460,6 +468,9 @@ class _MapScreenState extends State<MapScreen> {
                     visited = _visitedIds.contains(spot.id);
                   });
                 }
+              },
+              onCorrectLocation: () {
+                unawaited(_correctSpotLocation(spot));
               },
             );
           },
@@ -470,6 +481,48 @@ class _MapScreenState extends State<MapScreen> {
     if (mounted) {
       setState(() => _selectedSpotId = null);
     }
+  }
+
+  Future<void> _correctSpotLocation(Spot spot) async {
+    final point = await Navigator.of(context).push<LatLng>(
+      MaterialPageRoute(
+        builder: (_) =>
+            LocationPickerScreen(spot: spot, tileCache: widget.tileCache),
+      ),
+    );
+
+    if (!mounted) return;
+    if (point == null) {
+      await _openSpot(spot);
+      return;
+    }
+
+    final updated = spot.copyWith(lat: point.latitude, lon: point.longitude);
+
+    _locationOverrides[spot.id] = point;
+    setState(() {
+      _spots = [for (final item in _spots) item.id == spot.id ? updated : item];
+    });
+
+    await _locationStore.save(_locationOverrides);
+    if (!mounted) return;
+
+    _mapController.move(point, 17);
+    _showMessage('Положение обновлено: ${spot.name}');
+    await _openSpot(updated);
+  }
+
+  List<Spot> _applyLocationOverrides(
+    List<Spot> spots,
+    Map<String, LatLng> overrides,
+  ) {
+    if (overrides.isEmpty) return spots;
+
+    return spots.map((spot) {
+      final point = overrides[spot.id];
+      if (point == null) return spot;
+      return spot.copyWith(lat: point.latitude, lon: point.longitude);
+    }).toList();
   }
 
   Future<void> _toggleVisited(Spot spot) async {
@@ -509,13 +562,14 @@ class _MapScreenState extends State<MapScreen> {
     try {
       final fresh = await _spotsRepository.fetchFresh();
       if (!mounted) return;
+      final spots = _applyLocationOverrides(fresh, _locationOverrides);
       setState(() {
-        _spots = fresh;
+        _spots = spots;
         _loadError = null;
       });
       unawaited(_spotsRefreshStore.markRefreshed());
       if (!silent) {
-        _showMessage('Загружено ${fresh.length} мест из OpenStreetMap');
+        _showMessage('Загружено ${spots.length} мест из OpenStreetMap');
       }
     } on SpotsLoadException catch (error) {
       if (!mounted) return;
