@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:spotmap/models/spot.dart';
@@ -184,4 +185,48 @@ void main() {
       reason: 'в снимке должен быть памятник собаке-космонавту',
     );
   });
+
+  test('ключевые памятники стоят на своих местах', () {
+    final file = File('assets/data/izhevsk_spots.json');
+    final decoded = jsonDecode(file.readAsStringSync()) as List<dynamic>;
+    final byId = <String, Spot>{};
+    for (final item in decoded) {
+      final spot = Spot.fromJson(item as Map<String, dynamic>);
+      byId[spot.id] = spot;
+    }
+
+    final is3 = byId['node/4388444017'];
+    final kirov = byId['node/970533211'];
+    expect(is3, isNotNull);
+    expect(kirov, isNotNull);
+    expect(
+      _distanceMeters(is3!, kirov!),
+      lessThan(100),
+      reason: 'танк ИС-3 должен стоять рядом с памятником С. М. Кирову',
+    );
+
+    final tsar = byId['node/4087799865'];
+    expect(tsar, isNotNull);
+    expect(tsar!.lat, closeTo(56.840274, 0.001));
+    expect(tsar.lon, closeTo(53.194688, 0.001));
+
+    final rotunda = byId['node/2398210534'];
+    expect(rotunda, isNotNull);
+    expect(rotunda!.lat, closeTo(56.845635, 0.001));
+    expect(rotunda.lon, closeTo(53.197571, 0.001));
+  });
+}
+
+double _distanceMeters(Spot a, Spot b) {
+  const earthRadius = 6371000.0;
+  const toRadians = pi / 180;
+  final dLat = (b.lat - a.lat) * toRadians;
+  final dLon = (b.lon - a.lon) * toRadians;
+  final h =
+      sin(dLat / 2) * sin(dLat / 2) +
+      cos(a.lat * toRadians) *
+          cos(b.lat * toRadians) *
+          sin(dLon / 2) *
+          sin(dLon / 2);
+  return 2 * earthRadius * asin(sqrt(h));
 }
