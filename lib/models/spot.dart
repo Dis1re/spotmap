@@ -59,6 +59,9 @@ class Spot {
       return null;
     }
 
+    // В OSM иногда попадают перечни животных или служебные названия.
+    if (name.length > 90 || ','.allMatches(name).length >= 4) return null;
+
     final center = element['center'];
     final lat = _toDouble(
       element['lat'] ?? (center is Map ? center['lat'] : null),

@@ -24,15 +24,38 @@ enum SpotCategory {
     );
   }
 
+  /// Аттракционы и животные, которые не являются культурными местами.
+  static const _amusementAttractions = {
+    'animal',
+    'amusement_ride',
+    'bumper_car',
+    'carousel',
+    'water_slide',
+    'roller_coaster',
+    'swing',
+    'big_wheel',
+    'drop_tower',
+    'observation_tower',
+    'dark_ride',
+    'summer_toboggan',
+    'kiddie_ride',
+    'train',
+    'monorail',
+  };
+
   /// Определяет категорию по тегам OpenStreetMap.
   ///
   /// Возвращает `null`, если объект не относится к культурным местам
-  /// (например, животное зоопарка или аттракцион).
+  /// (например, животное зоопарка, аттракцион или маршрут транспорта).
   static SpotCategory? fromOsmTags(Map<String, dynamic> tags) {
     String? value(String key) => tags[key]?.toString();
 
-    if (value('attraction') == 'animal' ||
-        value('attraction') == 'amusement_ride') {
+    // Маршруты общественного транспорта иногда ошибочно имеют тег historic.
+    if (value('type') == 'route' || value('route') != null) return null;
+
+    if (_amusementAttractions.contains(value('attraction'))) return null;
+
+    if (value('tourism') == 'zoo' && value('zoo') == 'petting_zoo') {
       return null;
     }
 
@@ -46,8 +69,13 @@ enum SpotCategory {
       return SpotCategory.monument;
     }
 
+    final isBusiness =
+        value('shop') != null ||
+        value('craft') != null ||
+        value('office') != null;
+
     if (const {'museum', 'gallery'}.contains(value('tourism'))) {
-      return SpotCategory.museum;
+      return isBusiness ? null : SpotCategory.museum;
     }
 
     if (const {'theatre', 'arts_centre'}.contains(value('amenity'))) {
@@ -62,7 +90,7 @@ enum SpotCategory {
       'viewpoint',
       'zoo',
     }.contains(value('tourism'))) {
-      return SpotCategory.attraction;
+      return isBusiness ? null : SpotCategory.attraction;
     }
 
     if (value('amenity') == 'planetarium') return SpotCategory.museum;

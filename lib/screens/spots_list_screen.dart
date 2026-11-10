@@ -59,126 +59,148 @@ class _SpotsListScreenState extends State<SpotsListScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (value) => setState(() => _query = value),
-              textInputAction: TextInputAction.search,
-              decoration: InputDecoration(
-                hintText: 'Поиск по названию',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _query.isEmpty
-                    ? null
-                    : IconButton(
-                        tooltip: 'Очистить',
-                        icon: const Icon(Icons.close),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() => _query = '');
+      body: SafeArea(
+        top: false,
+        bottom: true,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (value) => setState(() => _query = value),
+                textInputAction: TextInputAction.search,
+                decoration: InputDecoration(
+                  hintText: 'Поиск по названию',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _query.isEmpty
+                      ? null
+                      : IconButton(
+                          tooltip: 'Очистить',
+                          icon: const Icon(Icons.close),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() => _query = '');
+                          },
+                        ),
+                  isDense: true,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(
+              height: 46,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  for (final filter in VisitFilter.values)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ChoiceChip(
+                        label: Text(filter.label),
+                        selected: _visit == filter,
+                        showCheckmark: false,
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+                        onSelected: (_) => setState(() => _visit = filter),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            SizedBox(
+              height: 46,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      label: const Text('Все категории'),
+                      selected: _category == null,
+                      showCheckmark: false,
+                      visualDensity: VisualDensity.compact,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+                      onSelected: (_) => setState(() => _category = null),
+                    ),
+                  ),
+                  for (final category in _availableCategories)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ChoiceChip(
+                        avatar: Icon(
+                          category.icon,
+                          size: 17,
+                          color: _category == category
+                              ? Colors.white
+                              : category.color,
+                        ),
+                        label: Text(category.label),
+                        selected: _category == category,
+                        showCheckmark: false,
+                        selectedColor: category.color,
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+                        labelStyle: TextStyle(
+                          color: _category == category ? Colors.white : null,
+                        ),
+                        onSelected: (_) {
+                          setState(() => _category = category);
                         },
                       ),
-                isDense: true,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
+                    ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Найдено ${spots.length} из ${widget.spots.length}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             ),
-          ),
-          SizedBox(
-            height: 46,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                for (final filter in VisitFilter.values)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: Text(filter.label),
-                      selected: _visit == filter,
-                      showCheckmark: false,
-                      onSelected: (_) => setState(() => _visit = filter),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          SizedBox(
-            height: 46,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
-                    label: const Text('Все категории'),
-                    selected: _category == null,
-                    showCheckmark: false,
-                    onSelected: (_) => setState(() => _category = null),
-                  ),
-                ),
-                for (final category in SpotCategory.values)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      avatar: Icon(
-                        category.icon,
-                        size: 17,
-                        color: _category == category
-                            ? Colors.white
-                            : category.color,
-                      ),
-                      label: Text(category.label),
-                      selected: _category == category,
-                      showCheckmark: false,
-                      selectedColor: category.color,
-                      labelStyle: TextStyle(
-                        color: _category == category ? Colors.white : null,
-                      ),
-                      onSelected: (_) {
-                        setState(() => _category = category);
+            Expanded(
+              child: spots.isEmpty
+                  ? const _EmptyList()
+                  : ListView.separated(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      itemCount: spots.length,
+                      separatorBuilder: (_, _) => const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final spot = spots[index];
+                        return _SpotTile(
+                          spot: spot,
+                          visited: widget.visitedIds.contains(spot.id),
+                          distanceMeters: _distanceTo(spot),
+                          onTap: () => Navigator.of(context).pop(spot),
+                        );
                       },
                     ),
-                  ),
-              ],
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Найдено ${spots.length} из ${widget.spots.length}',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            child: spots.isEmpty
-                ? const _EmptyList()
-                : ListView.separated(
-                    itemCount: spots.length,
-                    separatorBuilder: (_, _) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final spot = spots[index];
-                      return _SpotTile(
-                        spot: spot,
-                        visited: widget.visitedIds.contains(spot.id),
-                        distanceMeters: _distanceTo(spot),
-                        onTap: () => Navigator.of(context).pop(spot),
-                      );
-                    },
-                  ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
+  }
+
+  List<SpotCategory> get _availableCategories {
+    return SpotCategory.values
+        .where(
+          (category) => widget.spots.any((spot) => spot.category == category),
+        )
+        .toList();
   }
 
   List<Spot> _filteredSpots() {

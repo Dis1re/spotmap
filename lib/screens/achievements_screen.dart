@@ -29,66 +29,70 @@ class AchievementsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Достижения')),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-        children: [
-          Card(
-            elevation: 0,
-            color: theme.colorScheme.primaryContainer,
-            child: Padding(
-              padding: const EdgeInsets.all(18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.emoji_events,
-                        color: theme.colorScheme.onPrimaryContainer,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          'Открыто $unlocked из ${achievements.length}',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: theme.colorScheme.onPrimaryContainer,
+      body: SafeArea(
+        top: false,
+        bottom: true,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          children: [
+            Card(
+              elevation: 0,
+              color: theme.colorScheme.primaryContainer,
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.emoji_events,
+                          color: theme.colorScheme.onPrimaryContainer,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Открыто $unlocked из ${achievements.length}',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: theme.colorScheme.onPrimaryContainer,
+                            ),
                           ),
                         ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: LinearProgressIndicator(
+                        value: achievements.isEmpty
+                            ? 0
+                            : unlocked / achievements.length,
+                        minHeight: 8,
+                        backgroundColor: theme.colorScheme.onPrimaryContainer
+                            .withAlpha(30),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: LinearProgressIndicator(
-                      value: achievements.isEmpty
-                          ? 0
-                          : unlocked / achievements.length,
-                      minHeight: 8,
-                      backgroundColor: theme.colorScheme.onPrimaryContainer
-                          .withAlpha(30),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Посещено мест: $visited из ${spots.length} · '
-                    'пройдено зон: $exploredZones',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onPrimaryContainer,
+                    const SizedBox(height: 10),
+                    Text(
+                      'Посещено мест: $visited из ${spots.length} · '
+                      'пройдено зон: $exploredZones',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onPrimaryContainer,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          for (final achievement in achievements)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: _AchievementCard(achievement: achievement),
-            ),
-        ],
+            const SizedBox(height: 16),
+            for (final achievement in achievements)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _AchievementCard(achievement: achievement),
+              ),
+          ],
+        ),
       ),
     );
   }

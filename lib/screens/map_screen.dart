@@ -28,7 +28,7 @@ import 'achievements_screen.dart';
 import 'nearby_screen.dart';
 import 'spots_list_screen.dart';
 
-enum _MapAction { refresh, toggleZones, offlineMap }
+enum _MapAction { nearby, achievements, refresh, toggleZones, offlineMap }
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key, this.tileCache});
@@ -145,31 +145,38 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final visibleSpots = _visibleSpots;
+    final compact = MediaQuery.sizeOf(context).width < 600;
 
     return Scaffold(
       appBar: AppBar(
-        titleSpacing: 8,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Спотмап · Ижевск',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-            ),
-            Text(
-              _spots.isEmpty
-                  ? 'Загружаем места…'
-                  : 'Открыто ${_visitedIds.length} из ${_spots.length} · '
-                        '${stepsLabel(_stepTracker.steps)}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+        titleSpacing: compact ? 8 : 16,
+        title: SizedBox(
+          width: compact ? 210 : null,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                compact ? 'Спотмап' : 'Спотмап · Ижевск',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
-          ],
+              Text(
+                _spots.isEmpty
+                    ? 'Загружаем места…'
+                    : 'Открыто ${_visitedIds.length} из ${_spots.length} · '
+                          '${stepsLabel(_stepTracker.steps)}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
           IconButton(
@@ -177,20 +184,38 @@ class _MapScreenState extends State<MapScreen> {
             onPressed: _openSpotsList,
             icon: const Icon(Icons.list_alt),
           ),
-          IconButton(
-            tooltip: 'Что рядом',
-            onPressed: _openNearby,
-            icon: const Icon(Icons.near_me_outlined),
-          ),
-          IconButton(
-            tooltip: 'Достижения',
-            onPressed: _openAchievements,
-            icon: const Icon(Icons.emoji_events_outlined),
-          ),
+          if (!compact)
+            IconButton(
+              tooltip: 'Что рядом',
+              onPressed: _openNearby,
+              icon: const Icon(Icons.near_me_outlined),
+            ),
+          if (!compact)
+            IconButton(
+              tooltip: 'Достижения',
+              onPressed: _openAchievements,
+              icon: const Icon(Icons.emoji_events_outlined),
+            ),
           PopupMenuButton<_MapAction>(
             tooltip: 'Ещё',
             onSelected: _onMenuAction,
             itemBuilder: (context) => [
+              if (compact)
+                const PopupMenuItem(
+                  value: _MapAction.nearby,
+                  child: _MenuRow(
+                    icon: Icons.near_me_outlined,
+                    label: 'Что рядом',
+                  ),
+                ),
+              if (compact)
+                const PopupMenuItem(
+                  value: _MapAction.achievements,
+                  child: _MenuRow(
+                    icon: Icons.emoji_events_outlined,
+                    label: 'Достижения',
+                  ),
+                ),
               PopupMenuItem(
                 value: _MapAction.refresh,
                 enabled: !_refreshing,
@@ -209,41 +234,26 @@ class _MapScreenState extends State<MapScreen> {
                   ],
                 ),
               ),
-              PopupMenuItem(
+              CheckedPopupMenuItem(
                 value: _MapAction.toggleZones,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      _showZones
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      _showZones
-                          ? 'Скрыть пройденные зоны'
-                          : 'Показать пройденные зоны',
-                    ),
-                  ],
+                checked: _showZones,
+                child: const _MenuRow(
+                  icon: Icons.grid_view_outlined,
+                  label: 'Пройденные зоны',
                 ),
               ),
-              PopupMenuItem(
+              const PopupMenuItem(
                 value: _MapAction.offlineMap,
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.offline_pin_outlined),
-                    SizedBox(width: 12),
-                    Text('Офлайн-карта'),
-                  ],
+                child: _MenuRow(
+                  icon: Icons.offline_pin_outlined,
+                  label: 'Офлайн-карта',
                 ),
               ),
             ],
           ),
         ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(52),
+          preferredSize: const Size.fromHeight(48),
           child: Material(
             color: theme.colorScheme.surface,
             child: CategoryFilterBar(
@@ -401,6 +411,10 @@ class _MapScreenState extends State<MapScreen> {
 
   void _onMenuAction(_MapAction action) {
     switch (action) {
+      case _MapAction.nearby:
+        unawaited(_openNearby());
+      case _MapAction.achievements:
+        unawaited(_openAchievements());
       case _MapAction.refresh:
         unawaited(_refreshSpots(silent: false));
       case _MapAction.toggleZones:
@@ -428,6 +442,7 @@ class _MapScreenState extends State<MapScreen> {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       showDragHandle: true,
       builder: (sheetContext) {
         var visited = _visitedIds.contains(spot.id);
@@ -704,6 +719,7 @@ class _MapScreenState extends State<MapScreen> {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       showDragHandle: true,
       builder: (_) => OfflineMapSheet(
         cache: cache,
@@ -740,5 +756,20 @@ class _MapScreenState extends State<MapScreen> {
           duration: const Duration(seconds: 4),
         ),
       );
+  }
+}
+
+class _MenuRow extends StatelessWidget {
+  const _MenuRow({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [Icon(icon), const SizedBox(width: 12), Text(label)],
+    );
   }
 }

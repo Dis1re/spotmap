@@ -17,10 +17,10 @@ class CategoryFilterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 52,
+      height: 48,
       child: ListView(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+        padding: const EdgeInsets.fromLTRB(8, 2, 8, 6),
         children: [
           _FilterChip(
             label: 'Все',
@@ -68,10 +68,12 @@ class _FilterChip extends StatelessWidget {
         showCheckmark: false,
         selectedColor: color,
         visualDensity: VisualDensity.compact,
-        avatar: Icon(icon, size: 18, color: selected ? Colors.white : color),
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+        avatar: Icon(icon, size: 17, color: selected ? Colors.white : color),
         label: Text(label),
         labelStyle: TextStyle(
-          fontSize: 13,
+          fontSize: 12.5,
           fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
           color: selected ? Colors.white : null,
         ),

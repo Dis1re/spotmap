@@ -51,67 +51,78 @@ class _NearbyScreenState extends State<NearbyScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Что рядом')),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-            child: Row(
-              children: [
-                Icon(Icons.near_me_outlined, color: theme.colorScheme.primary),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Найдено ${items.length} мест $radiusLabel',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+      body: SafeArea(
+        top: false,
+        bottom: true,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.near_me_outlined,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Найдено ${items.length} мест $radiusLabel',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          SizedBox(
-            height: 46,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                for (final radius in _NearbyRadius.values)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: Text(radius.label),
-                      selected: _radius == radius,
-                      showCheckmark: false,
-                      onSelected: (_) => setState(() => _radius = radius),
+            SizedBox(
+              height: 46,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  for (final radius in _NearbyRadius.values)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ChoiceChip(
+                        label: Text(radius.label),
+                        selected: _radius == radius,
+                        showCheckmark: false,
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+                        onSelected: (_) => setState(() => _radius = radius),
+                      ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Expanded(
-            child: items.isEmpty
-                ? _EmptyNearby(
-                    radius: _radius,
-                    onShowAll: () =>
-                        setState(() => _radius = _NearbyRadius.all),
-                  )
-                : ListView.separated(
-                    itemCount: items.length,
-                    separatorBuilder: (_, _) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final item = items[index];
-                      return _NearbyTile(
-                        spot: item.spot,
-                        distanceMeters: item.distanceMeters,
-                        visited: widget.visitedIds.contains(item.spot.id),
-                        onTap: () => Navigator.of(context).pop(item.spot),
-                      );
-                    },
-                  ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Expanded(
+              child: items.isEmpty
+                  ? _EmptyNearby(
+                      radius: _radius,
+                      onShowAll: () =>
+                          setState(() => _radius = _NearbyRadius.all),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      itemCount: items.length,
+                      separatorBuilder: (_, _) => const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final item = items[index];
+                        return _NearbyTile(
+                          spot: item.spot,
+                          distanceMeters: item.distanceMeters,
+                          visited: widget.visitedIds.contains(item.spot.id),
+                          onTap: () => Navigator.of(context).pop(item.spot),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }

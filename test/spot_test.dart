@@ -94,6 +94,32 @@ void main() {
     test('игнорирует обычные здания', () {
       expect(SpotCategory.fromOsmTags({'building': 'yes'}), isNull);
     });
+
+    test('игнорирует маршруты, аттракционы и коммерческие галереи', () {
+      expect(
+        SpotCategory.fromOsmTags({
+          'type': 'route',
+          'route': 'tram',
+          'historic': 'yes',
+        }),
+        isNull,
+      );
+      expect(
+        SpotCategory.fromOsmTags({
+          'tourism': 'attraction',
+          'attraction': 'bumper_car',
+        }),
+        isNull,
+      );
+      expect(
+        SpotCategory.fromOsmTags({'tourism': 'zoo', 'zoo': 'petting_zoo'}),
+        isNull,
+      );
+      expect(
+        SpotCategory.fromOsmTags({'tourism': 'gallery', 'shop': 'frame'}),
+        isNull,
+      );
+    });
   });
 
   group('Spot.fromOverpassElement', () {
@@ -135,6 +161,7 @@ void main() {
     expect(decoded.length, greaterThan(250));
 
     final ids = <String>{};
+    final names = <String>[];
     for (final item in decoded) {
       final spot = Spot.fromJson(item as Map<String, dynamic>);
 
@@ -143,6 +170,18 @@ void main() {
       expect(spot.lat, inInclusiveRange(56.78, 56.93));
       expect(spot.lon, inInclusiveRange(53.08, 53.34));
       expect(ids.add(spot.id), isTrue, reason: 'дубликат id: ${spot.id}');
+      names.add(spot.name.toLowerCase());
     }
+
+    expect(
+      names.any((name) => name.contains('пельмен')),
+      isTrue,
+      reason: 'в снимке должен быть памятник пельменю',
+    );
+    expect(
+      names.any((name) => name.contains('звёздочк')),
+      isTrue,
+      reason: 'в снимке должен быть памятник собаке-космонавту',
+    );
   });
 }
