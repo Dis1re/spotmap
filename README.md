@@ -1,5 +1,8 @@
 # Спотмап · Ижевск
 
+[![CI](https://github.com/Dis1re/spotmap/actions/workflows/ci.yml/badge.svg)](https://github.com/Dis1re/spotmap/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/Dis1re/spotmap)](https://github.com/Dis1re/spotmap/releases)
+
 Flutter-приложение с картой культурных мест Ижевска. Гуляете по городу, находите
 на карте парки, памятники, музеи, театры и родники — и отмечаете те, где уже
 побывали.
@@ -175,6 +178,25 @@ flutter build apk --release
 Сейчас release-сборка подписана debug-ключом Flutter — этого достаточно для
 личного теста, но не для Google Play. Для публикации в магазине нужен свой
 keystore и настройка `signingConfigs`.
+
+## Версии и релизы
+
+Схема версий — SemVer: `MAJOR.MINOR.PATCH`, номер сборки указывается после `+`
+в `pubspec.yaml` (сейчас `1.0.0+1`). История изменений — в `CHANGELOG.md`.
+
+Как выпустить новую версию:
+
+1. Обновите `version` в `pubspec.yaml` и добавьте запись в `CHANGELOG.md`.
+2. Закоммитьте изменения.
+3. Поставьте тег и отправьте его:
+
+   ```bash
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
+
+4. Workflow `release.yml` соберёт APK и создаст GitHub Release с заметками и
+   прикреплённым `app-release.apk`.
 
 ## Лицензия
 
