@@ -163,3 +163,24 @@ test/
 flutter analyze
 flutter test
 ```
+
+## Сборка APK
+
+```bash
+flutter build apk --release
+```
+
+Готовый файл: `build/app/outputs/flutter-apk/app-release.apk`.
+
+Сейчас release-сборка подписана debug-ключом Flutter — этого достаточно для
+личного теста, но не для Google Play. Для публикации в магазине нужен свой
+keystore и настройка `signingConfigs`.
+
+## Лицензия
+
+Код распространяется по лицензии MIT — см. файл `LICENSE`.
+
+Данные взяты из OpenStreetMap и распространяются по лицензии ODbL 1.0,
+© OpenStreetMap contributors. Тайлы карты загружаются с
+`tile.openstreetmap.org` и используются с учётом политики использования
+сервиса OpenStreetMap.
